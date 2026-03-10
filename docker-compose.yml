@@ -1,0 +1,66 @@
+services:
+  api:
+    build: ./api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/data
+      - ./api/app.py:/app/app.py
+    depends_on:
+      - redis
+      - postgres
+    environment:
+      - DB_HOST=postgres
+      - DB_NAME=grading
+      - DB_USER=admin
+      - DB_PASS=secret
+
+  worker:
+    build: ./worker
+    volumes:
+      - ./data:/data
+      - ./worker/worker.py:/app/worker.py
+    depends_on:
+      - redis
+      - postgres
+    environment:
+      - DB_HOST=postgres
+      - DB_NAME=grading
+      - DB_USER=admin
+      - DB_PASS=secret
+
+  grader:
+    build: ./grading
+    volumes:
+      - ./grading/grader.py:/app/grader.py
+    depends_on:
+      - redis
+      - postgres
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      - DB_HOST=postgres
+      - DB_NAME=grading
+      - DB_USER=admin
+      - DB_PASS=secret
+      - OLLAMA_HOST=http://host.docker.internal:11434
+
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: grading
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: secret
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+volumes:
+  postgres_data:
