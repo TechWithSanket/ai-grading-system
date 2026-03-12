@@ -1,5 +1,10 @@
 FROM python:3.10-slim
 WORKDIR /app
+
+RUN apt-get update && apt-get install -y \
+    poppler-utils \
+    && rm -rf /var/lib/apt/lists/*
+
 RUN pip install --no-cache-dir \
     "numpy==1.26.4" \
     "torch==2.1.0" \
@@ -7,7 +12,9 @@ RUN pip install --no-cache-dir \
     "sentence-transformers==2.2.2" \
     redis \
     psycopg2-binary \
-    requests
-RUN pip install --force-reinstall "numpy==1.26.4"
+    requests \
+    pdf2image \
+    Pillow
+
 COPY grader.py .
 CMD ["python", "grader.py"]

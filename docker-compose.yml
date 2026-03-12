@@ -32,18 +32,23 @@ services:
   grader:
     build: ./grading
     volumes:
+      - ./data:/data
       - ./grading/grader.py:/app/grader.py
     depends_on:
       - redis
       - postgres
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     environment:
       - DB_HOST=postgres
       - DB_NAME=grading
       - DB_USER=admin
       - DB_PASS=secret
-      - OLLAMA_HOST=http://host.docker.internal:11434
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
 
   postgres:
     image: postgres:15
